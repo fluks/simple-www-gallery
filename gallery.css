@@ -1,3 +1,7 @@
+* {
+  font-family: Verdana, Helvetica, Arial;
+}
+
 #images-container {
   display: flex;
   flex-wrap: wrap;
