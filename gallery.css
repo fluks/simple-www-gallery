@@ -22,3 +22,48 @@ img {
   object-fit: contain;
   object-position: center;
 }
+
+#arrows-container {
+  display: none;
+  width: 100%;
+}
+
+.fullscreen-on #arrows-container {
+  display: block;
+}
+
+.fullscreen-on a {
+  font-size: 4em;
+  text-decoration: none;
+  position: absolute;
+  transform: translateY(-50%);
+  top: 50%;
+}
+
+#previous-image {
+  left: 0%;
+}
+
+#next-image {
+  right: 0%;
+}
+
+@media (hover:hover) {
+  .fullscreen-on a {
+    opacity: 0;
+  }
+
+  .fullscreen-on a:hover {
+    opacity: 1;
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 0;
+    }
+  }
+}

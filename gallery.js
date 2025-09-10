@@ -31,6 +31,15 @@ async function loadImages(params) {
     }
 }
 
+function addLinksToButtons(i) {
+    const nImages = Array.from(document.querySelectorAll('img')).length;
+    const iPrevious = i - 1 < 0 ? nImages - 1 : i - 1;
+    const iNext = i + 1 > nImages - 1 ? 0 : i + 1;
+
+    document.querySelector('#previous-image').href = `./gallery.html?img=${iPrevious}.jpg`;
+    document.querySelector('#next-image').href = `./gallery.html?img=${iNext}.jpg`;
+}
+
 async function load() {
     const params = new URL(location).searchParams;
     await loadImages(params);
@@ -41,6 +50,7 @@ async function load() {
         if (img) {
             img.classList.add(CLASS_FULLSCREEN);
             document.querySelector('#images-container').classList.add(CLASS_FULLSCREEN_ON);
+            addLinksToButtons(parseInt(i));
         }
     }
 }
@@ -67,9 +77,25 @@ function imageClickHandler(e) {
         const urlParts = el.src.split('/');
         const filename = urlParts[urlParts.length - 1];
         url.searchParams.set('img', filename);
+
+        addLinksToButtons(parseInt(filename));
     }
     history.pushState({}, '', url);
 }
 
 document.addEventListener('DOMContentLoaded', load);
 document.querySelector('#images-container').addEventListener('click', imageClickHandler);
+let mouseTimeout;
+const links = Array.from(document.querySelectorAll('a'));
+document.addEventListener('mousemove', () => {
+    links.forEach(el => {
+        el.style.opacity = 1;
+    });
+
+    clearTimeout(mouseTimeout);
+    mouseTimeout = setTimeout(() => {
+        links.forEach(el => {
+            el.style = 'animation: 1s fadeOut ease';
+        });
+    }, 1000);
+});
