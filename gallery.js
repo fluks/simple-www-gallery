@@ -2,10 +2,11 @@ const
     CLASS_FULLSCREEN = 'fullscreen',
     CLASS_FULLSCREEN_ON = 'fullscreen-on';
 
-function createImage(file) {
+function createImage(file, i) {
     const div = document.createElement('div');
     const img = document.createElement('img');   
     img.src = file;
+    img.setAttribute('data-index', i);
     div.appendChild(img);
 
     return div;
@@ -21,7 +22,7 @@ async function loadImages(params) {
                 console.log(`Fetching file ${file} failed. Status: ${res.status}`);
                 return;
             }
-            const img = createImage(file);
+            const img = createImage(file, i);
             container.appendChild(img);
         }
         catch (e) {
@@ -31,13 +32,29 @@ async function loadImages(params) {
     }
 }
 
+function linkClickHandler(ev, i, el) {
+    ev.preventDefault();
+    el.removeEventListener('click', linkClickHandler);
+
+    document.querySelector(`.${CLASS_FULLSCREEN}`).classList.remove(CLASS_FULLSCREEN);
+    document.querySelector(`img[data-index="${i}"]`).classList.add(CLASS_FULLSCREEN);
+
+    const url = new URL(location);
+    url.searchParams.set('img', `${i}.jpg`);
+    history.pushState({}, '', url);
+
+    addLinksToButtons(i);
+}
+
 function addLinksToButtons(i) {
     const nImages = Array.from(document.querySelectorAll('img')).length;
     const iPrevious = i - 1 < 0 ? nImages - 1 : i - 1;
     const iNext = i + 1 > nImages - 1 ? 0 : i + 1;
 
-    document.querySelector('#previous-image').href = `./gallery.html?img=${iPrevious}.jpg`;
-    document.querySelector('#next-image').href = `./gallery.html?img=${iNext}.jpg`;
+    const previousImage = document.querySelector('#previous-image');
+    const nextImage = document.querySelector('#next-image');
+    previousImage.addEventListener('click', ev => linkClickHandler(ev, iPrevious, nextImage), { once: true, });
+    nextImage.addEventListener('click', ev => linkClickHandler(ev, iNext, previousImage), { once: true, });
 }
 
 async function load() {
