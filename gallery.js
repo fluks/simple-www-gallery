@@ -34,7 +34,6 @@ async function loadImages(params) {
 
 function linkClickHandler(ev, i, el) {
     ev.preventDefault();
-    el.removeEventListener('click', linkClickHandler);
 
     document.querySelector(`.${CLASS_FULLSCREEN}`).classList.remove(CLASS_FULLSCREEN);
     document.querySelector(`img[data-index="${i}"]`).classList.add(CLASS_FULLSCREEN);
@@ -46,6 +45,27 @@ function linkClickHandler(ev, i, el) {
     addLinksToButtons(i);
 }
 
+let g_isMouseTimeoutSet = false,
+    mouseTimeout;
+function fadeButtons() {
+    g_isMouseTimeoutSet = true;
+
+    document.addEventListener('mousemove', () => {
+        const links = Array.from(document.querySelectorAll('a'));
+
+        links.forEach(el => {
+            el.style.opacity = 1;
+        });
+
+        clearTimeout(mouseTimeout);
+        mouseTimeout = setTimeout(() => {
+            links.forEach(el => {
+                el.style = 'animation: 1s fadeOut ease';
+            });
+        }, 1000);
+    });
+}
+
 function addLinksToButtons(i) {
     const nImages = Array.from(document.querySelectorAll('img')).length;
     const iPrevious = i - 1 < 0 ? nImages - 1 : i - 1;
@@ -53,8 +73,28 @@ function addLinksToButtons(i) {
 
     const previousImage = document.querySelector('#previous-image');
     const nextImage = document.querySelector('#next-image');
-    previousImage.addEventListener('click', ev => linkClickHandler(ev, iPrevious, nextImage), { once: true, });
-    nextImage.addEventListener('click', ev => linkClickHandler(ev, iNext, previousImage), { once: true, });
+
+    // Remove any existing listeners first
+    previousImage.replaceWith(previousImage.cloneNode(true));
+    nextImage.replaceWith(nextImage.cloneNode(true));
+
+    // Get fresh references after clone
+    const newPrevious = document.querySelector('#previous-image');
+    const newNext = document.querySelector('#next-image');
+
+    newPrevious.addEventListener('click',
+        ev => linkClickHandler(ev, iPrevious, newNext),
+        { once: true });
+    newNext.addEventListener('click',
+        ev => linkClickHandler(ev, iNext, newPrevious),
+        { once: true });
+
+    // Has mouse
+    if (!window.matchMedia("(any-hover: none)").matches) {
+        if (!g_isMouseTimeoutSet) {
+            fadeButtons();
+        }
+    }
 }
 
 async function load() {
@@ -102,17 +142,3 @@ function imageClickHandler(e) {
 
 document.addEventListener('DOMContentLoaded', load);
 document.querySelector('#images-container').addEventListener('click', imageClickHandler);
-let mouseTimeout;
-const links = Array.from(document.querySelectorAll('a'));
-document.addEventListener('mousemove', () => {
-    links.forEach(el => {
-        el.style.opacity = 1;
-    });
-
-    clearTimeout(mouseTimeout);
-    mouseTimeout = setTimeout(() => {
-        links.forEach(el => {
-            el.style = 'animation: 1s fadeOut ease';
-        });
-    }, 1000);
-});
