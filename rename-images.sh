@@ -2,9 +2,11 @@
 
 main() {
     local i=0
-    for f in *.jpg; do
-        mv "$f" $i.jpg
-        mogrify -auto-orient "$i.jpg"
+    for f in *; do
+        file --mime-type "$f" | grep --quiet image
+        [ "$?" -eq 0 ] || break;
+        mv "$f" $i
+        #mogrify -auto-orient "$i.jpg"
         i=$((i+1))
     done
 }

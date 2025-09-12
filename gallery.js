@@ -15,7 +15,7 @@ function createImage(file, i) {
 async function loadImages(params) {
     const container = document.querySelector('#images-container');
     for (let i = 0;; i++) {
-        const file = `./${i}.jpg`;
+        const file = `./${i}`;
         try {
             const res = await fetch(file);
             if (!res.ok) {
@@ -39,7 +39,7 @@ function linkClickHandler(ev, i, el) {
     document.querySelector(`img[data-index="${i}"]`).classList.add(CLASS_FULLSCREEN);
 
     const url = new URL(location);
-    url.searchParams.set('img', `${i}.jpg`);
+    url.searchParams.set('img', `${i}`);
     history.pushState({}, '', url);
 
     addLinksToButtons(i);
