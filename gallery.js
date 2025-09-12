@@ -126,6 +126,8 @@ function imageClickHandler(e) {
         container.classList.remove(CLASS_FULLSCREEN_ON);
 
         url.searchParams.delete('img');
+
+        el.scrollIntoView();
     }
     else {
         el.classList.add(CLASS_FULLSCREEN);
