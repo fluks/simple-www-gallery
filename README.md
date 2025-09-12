@@ -9,7 +9,7 @@ ImageMagick for auto orienting images.
 ## Usage
 
 * Run rename-images.sh on directory where you have the images you want to publish.
-* Copy all images and gallery.* files to a server.
+* Copy all images and gallery.\* files to a server.
 
 ## License
 
