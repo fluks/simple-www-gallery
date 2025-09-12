@@ -6,7 +6,7 @@ main() {
         file --mime-type "$f" | grep --quiet image
         [ "$?" -eq 0 ] || break;
         mv "$f" $i
-        #mogrify -auto-orient "$i.jpg"
+        mogrify -auto-orient "$i"
         i=$((i+1))
     done
 }
