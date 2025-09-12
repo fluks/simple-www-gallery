@@ -6,7 +6,9 @@ main() {
         file --mime-type "$f" | grep --quiet image
         [ "$?" -eq 0 ] || break;
         mv "$f" $i
-        mogrify -auto-orient "$i"
+        #mogrify -auto-orient "$i"
+        # Command below is a lot faster than mogrify, use mogrify if you don't want to install libjpeg-turbo-progs.
+        exifautotran "$i"
         i=$((i+1))
     done
 }
