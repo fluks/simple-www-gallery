@@ -1,76 +1,132 @@
 const
     CLASS_FULLSCREEN = 'fullscreen',
-    CLASS_FULLSCREEN_ON = 'fullscreen-on';
+    CLASS_FULLSCREEN_ON = 'fullscreen-on',
+    g_imagesContainer = document.querySelector('#images-container');
+let g_isMouseTimeoutSet = false,
+    g_mouseTimeout;
 
-function createImage(file, i) {
+function getFilename(url) {
+    const urlParts = url.pathname.split('/');
+
+    return urlParts[urlParts.length - 1];
+}
+
+function createMedia(media) {
     const div = document.createElement('div');
-    const img = document.createElement('img');   
-    img.src = file;
-    img.setAttribute('data-index', i);
-    div.appendChild(img);
+    let element;
+    if (media.type === 'image') {
+        element = document.createElement('img');
+        element.src = media.url;
+    }
+    else {
+        element = document.createElement('video');
+        element.src = media.url;
+        element.setAttribute('controls', '');
+    }
+    element.classList.add('media');
+    element.setAttribute('data-filename', getFilename(new URL(media.url)));
+    div.appendChild(element);
 
     return div;
 }
 
-async function loadImages(params) {
-    const container = document.querySelector('#images-container');
-    for (let i = 0;; i++) {
-        const file = `./${i}`;
+function getBaseURL(url) {
+    const paths = url.pathname.split('/');
+    paths.pop();
+
+    return paths.join('/') + '/';
+}
+
+async function getLinks(baseURL) {
+    const res = await fetch(baseURL, { method: 'GET', });
+    if (!res.ok) {
+        throw new Error(`Fetching URL ${baseURL} failed: ${res.status}`);
+    }
+    const html = await res.text();
+    const _document = (new DOMParser()).parseFromString(html, 'text/html');
+
+    return Array.from(_document.querySelectorAll('a')).map(a => a.href);
+}
+
+async function getMedias(links) {
+    let medias = links.map(async l => {
         try {
-            const res = await fetch(file);
+            const res = await fetch(l, { method: 'HEAD', });
             if (!res.ok) {
-                console.log(`Fetching file ${file} failed. Status: ${res.status}`);
-                return;
+                throw new Error(`Fetching URL ${l} failed. Status: ${res.status}`);
             }
-            const img = createImage(file, i);
-            container.appendChild(img);
+            const type = res.headers.get('content-type').split('/')[0];
+            if ([ 'image', 'video' ].includes(type)) {
+                return { type: type, url: l, };
+            }
         }
         catch (e) {
-            console.log(`Fetching file ${file} failed. ${e}`);
-            return;
+            console.log(e);
         }
-    }
+    });
+    medias = await Promise.all(medias);
+
+    return medias.filter(l => l);
 }
 
-function linkClickHandler(ev, i, el) {
-    ev.preventDefault();
+async function loadMedias(url) {
+    const baseURL = getBaseURL(url);
+    const links = await getLinks(baseURL);
+    const medias = await getMedias(links);
 
-    document.querySelector(`.${CLASS_FULLSCREEN}`).classList.remove(CLASS_FULLSCREEN);
-    document.querySelector(`img[data-index="${i}"]`).classList.add(CLASS_FULLSCREEN);
-
-    const url = new URL(location);
-    url.searchParams.set('img', `${i}`);
-    history.pushState({}, '', url);
-
-    addLinksToButtons(i);
-}
-
-let g_isMouseTimeoutSet = false,
-    mouseTimeout;
-function fadeButtons() {
-    g_isMouseTimeoutSet = true;
-
-    document.addEventListener('mousemove', () => {
-        const links = Array.from(document.querySelectorAll('a'));
-
-        links.forEach(el => {
-            el.style.opacity = 1;
-        });
-
-        clearTimeout(mouseTimeout);
-        mouseTimeout = setTimeout(() => {
-            links.forEach(el => {
-                el.style = 'animation: 1s fadeOut ease';
-            });
-        }, 1000);
+    medias.forEach(m => {
+        const media = createMedia(m);
+        g_imagesContainer.appendChild(media);
     });
 }
 
-function addLinksToButtons(i) {
-    const nImages = Array.from(document.querySelectorAll('img')).length;
-    const iPrevious = i - 1 < 0 ? nImages - 1 : i - 1;
-    const iNext = i + 1 > nImages - 1 ? 0 : i + 1;
+function linkClickHandler(ev, elem) {
+    ev.preventDefault();
 
+    document.querySelector(`.${CLASS_FULLSCREEN}`).classList.remove(CLASS_FULLSCREEN);
+    const filename = getFilename(new URL(elem.src));
+    document.querySelector(`[data-filename="${filename}"]`).classList.add(CLASS_FULLSCREEN);
+
+    const url = new URL(location);
+    url.searchParams.set('media', filename);
+    history.pushState({}, '', url);
+
+    addLinksToButtons(elem);
+}
+
+function _fadeButtons() {
+    const links = Array.from(document.querySelectorAll('a'));
+
+    links.forEach(el => {
+        el.style.opacity = 1;
+    });
+
+    clearTimeout(g_mouseTimeout);
+    g_mouseTimeout = setTimeout(() => {
+        links.forEach(el => {
+            el.style = 'animation: 1s fadeOut ease';
+        });
+    }, 1000);
+}
+
+function fadeButtons() {
+    g_isMouseTimeoutSet = true;
+    document.addEventListener('mousemove', _fadeButtons);
+}
+
+function getSibling(filename, direction) {
+    const medias = Array.from(document.querySelectorAll('[data-filename]'));
+    const i = medias.findIndex(m => m.getAttribute('data-filename') === filename);
+
+    if (direction === -1) {
+        return i === 0 ? medias[medias.length - 1] : medias[i - 1];
+    }
+    else {
+        return i === medias.length - 1 ? medias[0] : medias[i + 1];
+    }
+}
+
+function addLinksToButtons(elem) {
     const previousImage = document.querySelector('#previous-image');
     const nextImage = document.querySelector('#next-image');
 
@@ -82,14 +138,15 @@ function addLinksToButtons(i) {
     const newPrevious = document.querySelector('#previous-image');
     const newNext = document.querySelector('#next-image');
 
-    newPrevious.addEventListener('click',
-        ev => linkClickHandler(ev, iPrevious, newNext),
+    const filename = getFilename(new URL(elem.src));
+    const previousElem = getSibling(filename, -1);
+    newPrevious.addEventListener('click', ev => linkClickHandler(ev, previousElem),
         { once: true });
-    newNext.addEventListener('click',
-        ev => linkClickHandler(ev, iNext, newPrevious),
+    const nextElem = getSibling(filename, 1);
+    newNext.addEventListener('click', ev => linkClickHandler(ev, nextElem),
         { once: true });
 
-    // Has mouse
+     // Has mouse
     if (!window.matchMedia("(any-hover: none)").matches) {
         if (!g_isMouseTimeoutSet) {
             fadeButtons();
@@ -98,16 +155,17 @@ function addLinksToButtons(i) {
 }
 
 async function load() {
-    const params = new URL(location).searchParams;
-    await loadImages(params);
+    const url = new URL(location);
+    const params = url.searchParams;
+    await loadMedias(url);
 
-    let i;
-    if ((i = params.get('img'))) {
-        const img = Array.from(document.querySelectorAll('img')).find(el => el.src.endsWith(i));
-        if (img) {
-            img.classList.add(CLASS_FULLSCREEN);
-            document.querySelector('#images-container').classList.add(CLASS_FULLSCREEN_ON);
-            addLinksToButtons(parseInt(i));
+    const filename = params.get('media');
+    if (filename) {
+        const elem = document.querySelector(`[data-filename="${filename}"]`);
+        if (elem) {
+            elem.classList.add(CLASS_FULLSCREEN);
+            g_imagesContainer.classList.add(CLASS_FULLSCREEN_ON);
+            addLinksToButtons(elem);
         }
     }
 }
@@ -115,29 +173,30 @@ async function load() {
 function imageClickHandler(e) {
     const el = e.target;
 
-    if (el.nodeName !== 'IMG') {
+    if (!(el.classList.contains('media'))) {
         return;
     }
 
     const url = new URL(location);
-    const container = document.querySelector('#images-container');
     if (el.classList.contains(CLASS_FULLSCREEN)) {
         el.classList.remove(CLASS_FULLSCREEN);
-        container.classList.remove(CLASS_FULLSCREEN_ON);
+        g_imagesContainer.classList.remove(CLASS_FULLSCREEN_ON);
 
-        url.searchParams.delete('img');
+        document.removeEventListener('mousemove', _fadeButtons);
+        g_isMouseTimeoutSet = false;
+
+        url.searchParams.delete('media');
 
         el.scrollIntoView();
     }
     else {
         el.classList.add(CLASS_FULLSCREEN);
-        container.classList.add(CLASS_FULLSCREEN_ON);
+        g_imagesContainer.classList.add(CLASS_FULLSCREEN_ON);
 
-        const urlParts = el.src.split('/');
-        const filename = urlParts[urlParts.length - 1];
-        url.searchParams.set('img', filename);
+        const filename = getFilename(new URL(el.src));
+        url.searchParams.set('media', filename);
 
-        addLinksToButtons(parseInt(filename));
+        addLinksToButtons(el);
     }
     history.pushState({}, '', url);
 }
