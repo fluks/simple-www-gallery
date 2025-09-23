@@ -201,5 +201,27 @@ function imageClickHandler(e) {
     history.pushState({}, '', url);
 }
 
+function keydownHandler(ev) {
+    if (!g_imagesContainer.classList.contains(CLASS_FULLSCREEN_ON)) {
+        return;
+    }
+
+    const click = new CustomEvent('click');
+    if (ev.key === 'ArrowLeft') {
+        document.querySelector('#previous-image').dispatchEvent(click);
+    }
+    else if (ev.key === 'ArrowRight') {
+        document.querySelector('#next-image').dispatchEvent(click);
+    }
+    else if (ev.key === 'Escape') {
+        const filename = (new URL(location)).searchParams.get('media');
+        const elem = document.querySelector(`[data-filename="${filename}"]`);
+        // Need to do this since imageClickHandler is an event handler and it takes an EventTarget as argument.
+        const eventTarget = { target: elem, };
+        imageClickHandler(eventTarget);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', load);
-document.querySelector('#images-container').addEventListener('click', imageClickHandler);
+g_imagesContainer.addEventListener('click', imageClickHandler);
+document.addEventListener('keydown', keydownHandler);
