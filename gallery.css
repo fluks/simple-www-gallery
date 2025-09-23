@@ -7,14 +7,13 @@
   flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
-  align-items: center;
 }
 
-.fullscreen-on img:not(.fullscreen) {
+.fullscreen-on .media:not(.fullscreen) {
   display: none;
 }
 
-img {
+.media {
   width: 200px;
   cursor: pointer;
 }
@@ -34,6 +33,11 @@ img {
 
 .fullscreen-on #arrows-container {
   display: block;
+}
+
+a {
+  cursor: pointer;
+  color: blue;
 }
 
 .fullscreen-on a {
