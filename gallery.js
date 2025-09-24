@@ -86,7 +86,11 @@ async function loadMedias(url, mediaWidth) {
 function linkClickHandler(ev, elem) {
     ev.preventDefault();
 
-    document.querySelector(`.${CLASS_FULLSCREEN}`).classList.remove(CLASS_FULLSCREEN);
+    const oldMedia = document.querySelector(`.${CLASS_FULLSCREEN}`);
+    oldMedia.classList.remove(CLASS_FULLSCREEN);
+    if (oldMedia.tagName === 'VIDEO' && videoIsPlaying(oldMedia)) {
+        oldMedia.pause();
+    }
     const filename = getFilename(new URL(elem.src));
     document.querySelector(`[data-filename="${filename}"]`).classList.add(CLASS_FULLSCREEN);
 
@@ -174,6 +178,20 @@ async function load() {
     }
 }
 
+function videoIsPlaying(el) {
+    return el.currentTime > 0 && !el.paused && !el.ended;
+}
+
+function pauseAllVideos(el) {
+    Array.from(document.querySelectorAll('video'))
+        .filter(e => !e.isEqualNode(el))
+        .forEach(e => {
+            if (videoIsPlaying(e)) {
+                e.pause();
+            }
+        });
+}
+
 function imageClickHandler(e) {
     const el = e.target;
 
@@ -196,6 +214,7 @@ function imageClickHandler(e) {
     else {
         el.classList.add(CLASS_FULLSCREEN);
         g_imagesContainer.classList.add(CLASS_FULLSCREEN_ON);
+        pauseAllVideos(el);
 
         const filename = getFilename(new URL(el.src));
         url.searchParams.set('media', filename);
