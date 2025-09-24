@@ -11,7 +11,7 @@ function getFilename(url) {
     return urlParts[urlParts.length - 1];
 }
 
-function createMedia(media) {
+function createMedia(media, width) {
     const div = document.createElement('div');
     let element;
     if (media.type === 'image') {
@@ -25,6 +25,9 @@ function createMedia(media) {
     }
     element.classList.add('media');
     element.setAttribute('data-filename', getFilename(new URL(media.url)));
+    if (width) {
+        element.style.width = `${width}px`;
+    }
     div.appendChild(element);
 
     return div;
@@ -69,13 +72,13 @@ async function getMedias(links) {
     return medias.filter(l => l);
 }
 
-async function loadMedias(url) {
+async function loadMedias(url, mediaWidth) {
     const baseURL = getBaseURL(url);
     const links = await getLinks(baseURL);
     const medias = await getMedias(links);
 
     medias.forEach(m => {
-        const media = createMedia(m);
+        const media = createMedia(m, mediaWidth);
         g_imagesContainer.appendChild(media);
     });
 }
@@ -157,7 +160,8 @@ function addLinksToButtons(elem) {
 async function load() {
     const url = new URL(location);
     const params = url.searchParams;
-    await loadMedias(url);
+    const mediaWidth = params.get('width');
+    await loadMedias(url, mediaWidth);
 
     const filename = params.get('media');
     if (filename) {
