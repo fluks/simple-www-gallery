@@ -2,6 +2,10 @@
 
 Simple gallery website to publish images and videos. I want to keep this rather simple. At least nothing server side. Perhaps JavaScript can have more functionality. It should be very easy from having images to have some sort of image gallery on web.
 
+## Demo
+
+https://fluks.github.io/simple-www-gallery/gallery.html
+
 ## Requirements
 
 Web server + autoindexing. Should work with at least Nginx and Apache.
