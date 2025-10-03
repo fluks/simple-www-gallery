@@ -88,6 +88,7 @@ function linkClickHandler(ev, elem) {
 
     const oldMedia = document.querySelector(`.${CLASS_FULLSCREEN}`);
     oldMedia.classList.remove(CLASS_FULLSCREEN);
+    oldMedia.classList.remove('zoom');
     if (oldMedia.tagName === 'VIDEO' && videoIsPlaying(oldMedia)) {
         oldMedia.pause();
     }
@@ -200,8 +201,10 @@ function imageClickHandler(e) {
     }
 
     const url = new URL(location);
+    // Fullscreen off.
     if (el.classList.contains(CLASS_FULLSCREEN)) {
         el.classList.remove(CLASS_FULLSCREEN);
+        el.classList.remove('zoom');
         g_imagesContainer.classList.remove(CLASS_FULLSCREEN_ON);
 
         document.removeEventListener('mousemove', _fadeButtons);
@@ -211,6 +214,7 @@ function imageClickHandler(e) {
 
         el.scrollIntoView();
     }
+    // Fullscreen on.
     else {
         el.classList.add(CLASS_FULLSCREEN);
         g_imagesContainer.classList.add(CLASS_FULLSCREEN_ON);
@@ -243,6 +247,12 @@ function keydownHandler(ev) {
         const eventTarget = { target: elem, };
         imageClickHandler(eventTarget);
     }
+}
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        document.querySelector(`.${CLASS_FULLSCREEN}`)?.classList.add('zoom');
+    });
 }
 
 document.addEventListener('DOMContentLoaded', load);
