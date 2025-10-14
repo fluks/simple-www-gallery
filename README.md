@@ -10,6 +10,15 @@ https://fluks.github.io/simple-www-gallery/gallery.html
 
 Web server + autoindexing. Should work with at least Nginx and Apache.
 
+Tested on:
+
+    * Apache
+    * nginx
+    * mini_httpd
+    * lighttpd
+    * Python -m http.server
+    * Caddy
+
 ## Usage
 
 * (Optional) Run auto-orient-medias.sh in same directory with media files to auto-orient them.
