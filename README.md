@@ -18,6 +18,25 @@ Tested on:
     * lighttpd
     * Python -m http.server
     * Caddy
+    * ruby -run -e httpd . -p 8080
+    * Busybox
+```
+mkdir cgi-bin
+cat <<EOF > cgi-bin/index.cgi
+#!/usr/bin/sh
+echo -e 'Content-type: text/html\n\n'
+
+echo '<html>
+<body>'
+for f in ../*; do
+  echo "<a href="./\$f">\$f</a>"
+done
+echo '</body>
+</html>'
+EOF
+chmod 775 cgi-bin/index.cgi
+busybox httpd -vfp 8080
+```
 
 ## Usage
 
