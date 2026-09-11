@@ -25,6 +25,7 @@ function createMedia(media, width) {
     }
     element.classList.add('media');
     element.setAttribute('data-filename', getFilename(new URL(media.url)));
+    element.setAttribute('title', media.url);
     if (width) {
         element.style.width = `${width}px`;
     }
